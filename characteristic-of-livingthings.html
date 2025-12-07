@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Characteristic Of L.V Simulator - Cambridge IGCSE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        /* Custom Animations */
+        @keyframes moveHorizontal {
+            0% { transform: translateX(-150%); }
+            100% { transform: translateX(150%); }
+        }
+        @keyframes legs {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        @keyframes flashEnergy {
+            0%, 80%, 100% { opacity: 0; transform: scale(0.5); }
+            90% { opacity: 1; transform: scale(1.2); }
+        }
+        @keyframes driftIn {
+            0% { transform: translateX(-20px); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateX(20px); opacity: 0; }
+        }
+        @keyframes driftOut {
+            0% { transform: translateX(-20px); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateX(20px); opacity: 0; }
+        }
+        @keyframes sunPath {
+            0% { left: 10%; }
+            50% { left: 80%; }
+            100% { left: 10%; }
+        }
+        @keyframes plantBend {
+            0% { transform: rotate(-15deg); }
+            50% { transform: rotate(15deg); }
+            100% { transform: rotate(-15deg); }
+        }
+        @keyframes grow {
+            0% { transform: scale(0.3); }
+            100% { transform: scale(1); }
+        }
+        @keyframes cellLeft {
+            0% { transform: translateX(0) scale(1); border-radius: 50%; width: 5rem; }
+            40% { transform: translateX(0) scale(1.1, 0.8); width: 6rem; }
+            60% { transform: translateX(-10px); }
+            100% { transform: translateX(-60px); }
+        }
+        @keyframes cellRight {
+            0% { transform: translateX(0) scale(1); opacity: 0; }
+            40% { opacity: 0; }
+            41% { opacity: 1; transform: translateX(0); }
+            60% { transform: translateX(10px); }
+            100% { transform: translateX(60px); }
+        }
+        @keyframes fadeText {
+            0%, 60% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        @keyframes waste1 {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translate(150%, -150%) scale(0.5); opacity: 0; }
+        }
+        @keyframes waste2 {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translate(180%, -50%) scale(0.5); opacity: 0; }
+        }
+        @keyframes waste3 {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translate(150%, 100%) scale(0.5); opacity: 0; }
+        }
+        @keyframes foodMove {
+            0% { transform: translateX(-100px); opacity: 1; }
+            45% { transform: translateX(30px); opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 0; transform: translateX(30px); }
+        }
+        @keyframes chomp {
+            0%, 40%, 60%, 100% { d: path("M60,60 L110,30 A50,50 0 1,1 110,90 Z"); }
+            50% { d: path("M60,60 L110,55 A50,50 0 1,1 110,65 Z"); }
+        }
+
+        .animate-move-horizontal { animation: moveHorizontal 6s linear infinite; }
+        .animate-legs { animation: legs 0.2s linear infinite; }
+        .animate-breathe { animation: breathe 3s ease-in-out infinite; }
+        .animate-flash-energy { animation: flashEnergy 3s infinite; }
+        .animate-drift-in { animation: driftIn 3s linear infinite; }
+        .animate-drift-out { animation: driftOut 3s linear infinite; }
+        .animate-sun-path { animation: sunPath 6s ease-in-out infinite; }
+        .animate-plant-bend { animation: plantBend 6s ease-in-out infinite; }
+        .animate-grow { animation: grow 5s linear infinite; }
+        .animate-cell-left { animation: cellLeft 4s ease-in-out infinite; }
+        .animate-cell-right { animation: cellRight 4s ease-in-out infinite; }
+        .animate-fade-text { animation: fadeText 4s ease-in-out infinite; }
+        .animate-waste-1 { animation: waste1 2s linear infinite; }
+        .animate-waste-2 { animation: waste2 2s linear infinite 0.5s; }
+        .animate-waste-3 { animation: waste3 2s linear infinite 1s; }
+        .animate-food-move { animation: foodMove 3s linear infinite; }
+        .animate-chomp { animation: chomp 3s linear infinite; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- ICONS (Replaced Lucide with Inline SVGs for single-file portability) ---
+        const Icon = ({ children, className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                {children}
+            </svg>
+        );
+
+        const Book = ({ className }) => <Icon className={className}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></Icon>;
+        const RotateCcw = ({ className }) => <Icon className={className}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></Icon>;
+        const Eye = ({ className }) => <Icon className={className}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></Icon>;
+        const ArrowRight = ({ className }) => <Icon className={className}><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></Icon>;
+        const Settings = ({ className }) => <Icon className={className}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></Icon>;
+        const Globe = ({ className }) => <Icon className={className}><circle cx="12" cy="12" r="10" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /><path d="M2 12h20" /></Icon>;
+        const X = ({ className }) => <Icon className={className}><path d="M18 6 6 18" /><path d="m6 6 12 12" /></Icon>;
+        const Menu = ({ className }) => <Icon className={className}><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" /></Icon>;
+        const Leaf = ({ className }) => <Icon className={className}><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 .5 3.49-.6 9.2a7 7 0 0 1-7.4 8.8Z" /><path d="M12 9.49a7 7 0 0 0-2.4 9.11" /></Icon>;
+        const Zap = ({ className }) => <Icon className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></Icon>;
+        const Activity = ({ className }) => <Icon className={className}><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></Icon>;
+        const Maximize = ({ className }) => <Icon className={className}><path d="M8 3H5a2 2 0 0 0-2 2v3" /><path d="M21 8V5a2 2 0 0 0-2-2h-3" /><path d="M3 16v3a2 2 0 0 0 2 2h3" /><path d="M16 21h3a2 2 0 0 0 2-2v-3" /></Icon>;
+        const Copy = ({ className }) => <Icon className={className}><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></Icon>;
+        const Trash2 = ({ className }) => <Icon className={className}><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /><line x1="10" x2="10" y1="11" y2="17" /><line x1="14" x2="14" y1="11" y2="17" /></Icon>;
+        const Utensils = ({ className }) => <Icon className={className}><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" /><path d="M7 2v20" /><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" /></Icon>;
+
+        // --- CAMBRIDGE IGCSE CONTENT & TRANSLATIONS ---
+        const content = {
+          en: {
+            title: "Characteristics of Living Things",
+            subtitle: "Cambridge IGCSE Biology / Combined Sciences",
+            buttons: {
+              reset: "Reset Simulation",
+              arrows: "Show Arrows",
+              explanations: "Show Explanations",
+              indicators: "Show Stimulus/Energy",
+              openBook: "Open Study Book",
+              closeBook: "Close Book"
+            },
+            characteristics: {
+              movement: {
+                title: "Movement",
+                def: "An action by an organism or part of an organism causing a change of position or place.",
+                simLabel: "Animal moving to find food / Plant moving towards light"
+              },
+              respiration: {
+                title: "Respiration",
+                def: "The chemical reactions in cells that break down nutrient molecules and release energy for metabolism.",
+                note: "Note: This is NOT breathing.",
+                simLabel: "Glucose + Oxygen → Energy released"
+              },
+              sensitivity: {
+                title: "Sensitivity",
+                def: "The ability to detect or sense stimuli in the internal or external environment and to make appropriate responses.",
+                simLabel: "Plant responding to light stimulus (Phototropism)"
+              },
+              growth: {
+                title: "Growth",
+                def: "A permanent increase in size and dry mass by an increase in cell number or cell size or both.",
+                simLabel: "Organism increasing in mass over time"
+              },
+              reproduction: {
+                title: "Reproduction",
+                def: "The processes that make more of the same kind of organism.",
+                simLabel: "Asexual reproduction (Binary Fission)"
+              },
+              excretion: {
+                title: "Excretion",
+                def: "Removal from organisms of the waste products of metabolism, toxic materials, and substances in excess of requirements.",
+                simLabel: "Cell removing metabolic waste"
+              },
+              nutrition: {
+                title: "Nutrition",
+                def: "Taking in of materials for energy, growth and development.",
+                simLabel: "Ingestion and absorption of nutrients"
+              }
+            },
+            book: {
+              livingVsNon: "Living vs Non-Living",
+              living: "Living",
+              nonLiving: "Non-Living",
+              table: [
+                { l: "Respires (releases energy)", nl: "Does not respire" },
+                { l: "Grows and develops", nl: "Does not grow (only gets added to)" },
+                { l: "Reproduces", nl: "Cannot reproduce" },
+                { l: "Excretes waste", nl: "Does not excrete" }
+              ]
+            }
+          },
+          id: {
+            title: "Ciri-ciri Makhluk Hidup",
+            subtitle: "Cambridge IGCSE Biologi / Sains Terpadu",
+            buttons: {
+              reset: "Ulang Simulasi",
+              arrows: "Tunjuk Panah",
+              explanations: "Tunjuk Penjelasan",
+              indicators: "Tunjuk Stimulus/Energi",
+              openBook: "Buka Buku Belajar",
+              closeBook: "Tutup Buku"
+            },
+            characteristics: {
+              movement: {
+                title: "Bergerak (Movement)",
+                def: "Tindakan oleh organisme atau bagian organisme yang menyebabkan perubahan posisi atau tempat.",
+                simLabel: "Hewan bergerak mencari makan / Tumbuhan bergerak ke arah cahaya"
+              },
+              respiration: {
+                title: "Bernapas (Respiration)",
+                def: "Reaksi kimia dalam sel yang memecah molekul nutrisi dan melepaskan energi untuk metabolisme.",
+                note: "Catatan: Ini BUKAN sekadar menghirup udara.",
+                simLabel: "Glukosa + Oksigen → Energi dilepaskan"
+              },
+              sensitivity: {
+                title: "Peka Rangsang (Sensitivity)",
+                def: "Kemampuan untuk mendeteksi atau merasakan rangsangan di lingkungan internal atau eksternal dan membuat respons yang sesuai.",
+                simLabel: "Tumbuhan merespons rangsang cahaya (Fototropisme)"
+              },
+              growth: {
+                title: "Tumbuh (Growth)",
+                def: "Peningkatan ukuran dan massa kering secara permanen melalui penambahan jumlah sel atau ukuran sel atau keduanya.",
+                simLabel: "Organisme bertambah massa seiring waktu"
+              },
+              reproduction: {
+                title: "Berkembang Biak (Reproduction)",
+                def: "Proses yang menghasilkan lebih banyak organisme sejenis.",
+                simLabel: "Reproduksi aseksual (Membelah Diri)"
+              },
+              excretion: {
+                title: "Ekskresi (Excretion)",
+                def: "Pembuangan sisa produk metabolisme, bahan beracun, dan zat yang melebihi kebutuhan dari organisme.",
+                simLabel: "Sel membuang limbah metabolisme"
+              },
+              nutrition: {
+                title: "Nutrisi (Nutrition)",
+                def: "Pengambilan materi untuk energi, pertumbuhan, dan perkembangan.",
+                simLabel: "Ingesti dan penyerapan nutrisi"
+              }
+            },
+            book: {
+              livingVsNon: "Makhluk Hidup vs Benda Mati",
+              living: "Makhluk Hidup",
+              nonLiving: "Benda Mati",
+              table: [
+                { l: "Melakukan respirasi (lepas energi)", nl: "Tidak melakukan respirasi" },
+                { l: "Tumbuh dan berkembang", nl: "Tidak tumbuh" },
+                { l: "Berkembang biak", nl: "Tidak bisa berkembang biak" },
+                { l: "Ekskresi limbah", nl: "Tidak melakukan ekskresi" }
+              ]
+            }
+          }
+        };
+
+        const App = () => {
+          const [lang, setLang] = useState('en');
+          const [activeTab, setActiveTab] = useState('movement');
+          const [showArrows, setShowArrows] = useState(true);
+          const [showExpl, setShowExpl] = useState(true);
+          const [showInd, setShowInd] = useState(true);
+          const [isBookOpen, setIsBookOpen] = useState(false);
+          const [animKey, setAnimKey] = useState(0); 
+
+          const t = content[lang];
+          const charKeys = Object.keys(t.characteristics);
+
+          const resetSim = () => {
+            setAnimKey(prev => prev + 1);
+          };
+
+          const iconsMap = {
+            movement: <Activity className="w-5 h-5" />,
+            respiration: <Zap className="w-5 h-5" />,
+            sensitivity: <Eye className="w-5 h-5" />,
+            growth: <Maximize className="w-5 h-5" />,
+            reproduction: <Copy className="w-5 h-5" />,
+            excretion: <Trash2 className="w-5 h-5" />,
+            nutrition: <Utensils className="w-5 h-5" />
+          };
+
+          return (
+            <div className="min-h-screen bg-slate-50 overflow-hidden flex flex-col relative">
+              
+              {/* HEADER */}
+              <header className="bg-emerald-700 text-white p-4 shadow-lg flex justify-between items-center z-20">
+                <div>
+                  <h1 className="text-xl md:text-2xl font-bold flex items-center gap-2">
+                    <Leaf className="w-6 h-6 text-emerald-300" />
+                    {t.title}
+                  </h1>
+                  <p className="text-xs md:text-sm text-emerald-100 opacity-90">{t.subtitle}</p>
+                </div>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => setLang(lang === 'en' ? 'id' : 'en')}
+                    className="flex items-center gap-2 bg-emerald-800 hover:bg-emerald-900 px-3 py-1.5 rounded-full text-sm transition-colors border border-emerald-600"
+                  >
+                    <Globe className="w-4 h-4" />
+                    <span className="font-bold">{lang === 'en' ? 'EN' : 'ID'}</span>
+                  </button>
+                  <button 
+                    onClick={() => setIsBookOpen(true)}
+                    className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-yellow-900 px-3 py-1.5 rounded-full text-sm font-bold transition-colors shadow-md"
+                  >
+                    <Book className="w-4 h-4" />
+                    <span className="hidden sm:inline">{t.buttons.openBook}</span>
+                  </button>
+                </div>
+              </header>
+
+              {/* MAIN CONTENT AREA */}
+              <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+                
+                {/* SIDEBAR NAVIGATION */}
+                <nav className="w-full md:w-64 bg-white border-r border-slate-200 overflow-y-auto z-10 flex md:flex-col shrink-0">
+                  {charKeys.map((key) => (
+                    <button
+                      key={key}
+                      onClick={() => { setActiveTab(key); resetSim(); }}
+                      className={`flex-1 md:flex-none p-4 text-left flex flex-col md:flex-row items-center md:items-start gap-2 border-b border-slate-100 transition-colors
+                        ${activeTab === key ? 'bg-emerald-50 text-emerald-800 border-l-4 border-l-emerald-600' : 'hover:bg-slate-50 text-slate-500'}`}
+                    >
+                      <div className={`p-2 rounded-lg ${activeTab === key ? 'bg-white shadow-sm' : 'bg-slate-100'}`}>
+                        {iconsMap[key]}
+                      </div>
+                      <div className="hidden md:block">
+                        <span className="font-bold block capitalize">{t.characteristics[key].title}</span>
+                        <span className="text-[10px] text-slate-400 uppercase tracking-wider">MRS GREN</span>
+                      </div>
+                      <span className="text-xs md:hidden font-bold">{key.substring(0,3).toUpperCase()}</span>
+                    </button>
+                  ))}
+                </nav>
+
+                {/* SIMULATION STAGE */}
+                <main className="flex-1 flex flex-col bg-slate-100 p-2 md:p-6 overflow-hidden">
+                  
+                  <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col relative overflow-hidden">
+                    
+                    {/* Simulation Header */}
+                    <div className="absolute top-0 left-0 right-0 p-4 z-10 bg-gradient-to-b from-white/90 to-transparent pointer-events-none">
+                      <h2 className="text-2xl font-bold text-slate-800 capitalize">{t.characteristics[activeTab].title}</h2>
+                      {showExpl && (
+                        <div className="mt-2 bg-blue-50/90 backdrop-blur-sm border-l-4 border-blue-500 p-3 rounded-r text-sm text-slate-700 max-w-2xl shadow-sm animate-in fade-in slide-in-from-top-2 pointer-events-auto">
+                          <p className="font-semibold">{t.characteristics[activeTab].def}</p>
+                          {t.characteristics[activeTab].note && <p className="text-xs text-blue-600 mt-1">{t.characteristics[activeTab].note}</p>}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* THE SIMULATION CANVAS */}
+                    <div className="flex-1 flex items-center justify-center relative bg-slate-50" key={animKey}>
+                      <SimulationCanvas 
+                        type={activeTab} 
+                        showArrows={showArrows} 
+                        showInd={showInd}
+                        showExpl={showExpl}
+                        lang={lang}
+                      />
+                    </div>
+
+                    {/* CONTROLS BAR */}
+                    <div className="bg-slate-50 border-t border-slate-200 p-3 md:p-4 flex flex-wrap gap-3 items-center justify-center md:justify-between z-10">
+                      <div className="flex gap-2 flex-wrap justify-center">
+                        <ToggleBtn active={showArrows} onClick={() => setShowArrows(!showArrows)} label={t.buttons.arrows} icon={<ArrowRight className="w-4 h-4" />} />
+                        <ToggleBtn active={showExpl} onClick={() => setShowExpl(!showExpl)} label={t.buttons.explanations} icon={<Menu className="w-4 h-4" />} />
+                        <ToggleBtn active={showInd} onClick={() => setShowInd(!showInd)} label={t.buttons.indicators} icon={<Settings className="w-4 h-4" />} />
+                      </div>
+                      <button 
+                        onClick={resetSim}
+                        className="flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md transition-all active:scale-95"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        {t.buttons.reset}
+                      </button>
+                    </div>
+
+                  </div>
+                </main>
+              </div>
+
+              {/* STUDY BOOK MODAL */}
+              <div className={`fixed inset-0 z-50 transition-all duration-500 ${isBookOpen ? 'visible' : 'invisible'}`}>
+                {/* Backdrop */}
+                <div 
+                  className={`absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity duration-500 ${isBookOpen ? 'opacity-100' : 'opacity-0'}`} 
+                  onClick={() => setIsBookOpen(false)}
+                />
+                
+                {/* Book Panel */}
+                <div className={`absolute right-0 top-0 bottom-0 w-full md:w-[600px] bg-white shadow-2xl transform transition-transform duration-500 ease-out flex flex-col ${isBookOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                  <div className="bg-yellow-500 p-4 text-yellow-900 flex justify-between items-center shadow-md">
+                    <h2 className="text-xl font-bold flex items-center gap-2">
+                      <Book className="w-6 h-6" />
+                      {t.buttons.openBook}
+                    </h2>
+                    <button onClick={() => setIsBookOpen(false)} className="p-1 hover:bg-yellow-600 rounded-full transition-colors">
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto p-6 bg-yellow-50">
+                    {/* Book Content */}
+                    <div className="space-y-8">
+                      
+                      {/* Intro Card */}
+                      <div className="bg-white p-6 rounded-xl shadow-sm border border-yellow-200">
+                        <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">{t.book.livingVsNon}</h3>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div className="space-y-2">
+                            <h4 className="font-bold text-emerald-600 text-center bg-emerald-50 py-1 rounded">{t.book.living}</h4>
+                            <ul className="space-y-2">
+                              {t.book.table.map((row, i) => (
+                                <li key={i} className="flex items-start gap-2">
+                                  <Leaf className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                                  <span>{row.l}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div className="space-y-2">
+                            <h4 className="font-bold text-slate-500 text-center bg-slate-100 py-1 rounded">{t.book.nonLiving}</h4>
+                            <ul className="space-y-2 text-slate-500">
+                              {t.book.table.map((row, i) => (
+                                <li key={i} className="flex items-start gap-2">
+                                  <X className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                                  <span>{row.nl}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Definitions List */}
+                      <div className="space-y-4">
+                        {charKeys.map(key => (
+                          <div key={key} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:border-emerald-200 transition-colors">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="text-emerald-600 bg-emerald-50 p-2 rounded-lg">
+                                {iconsMap[key]}
+                              </div>
+                              <h3 className="font-bold text-lg text-slate-800">{t.characteristics[key].title}</h3>
+                            </div>
+                            <p className="text-slate-600 leading-relaxed text-sm">{t.characteristics[key].def}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          );
+        };
+
+        const ToggleBtn = ({ active, onClick, label, icon }) => (
+          <button
+            onClick={onClick}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+              active 
+                ? 'bg-blue-100 text-blue-700 border-blue-300 shadow-inner' 
+                : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
+            }`}
+          >
+            {icon}
+            {label}
+          </button>
+        );
+
+        const SimulationCanvas = ({ type, showArrows, showInd, showExpl, lang }) => {
+          switch (type) {
+            case 'movement':
+              return <SimMovement showArrows={showArrows} showExpl={showExpl} lang={lang} />;
+            case 'respiration':
+              return <SimRespiration showArrows={showArrows} showInd={showInd} showExpl={showExpl} lang={lang} />;
+            case 'sensitivity':
+              return <SimSensitivity showArrows={showArrows} showInd={showInd} lang={lang} />;
+            case 'growth':
+              return <SimGrowth showArrows={showArrows} showExpl={showExpl} lang={lang} />;
+            case 'reproduction':
+              return <SimReproduction showArrows={showArrows} lang={lang} />;
+            case 'excretion':
+              return <SimExcretion showArrows={showArrows} lang={lang} />;
+            case 'nutrition':
+              return <SimNutrition showArrows={showArrows} lang={lang} />;
+            default:
+              return null;
+          }
+        };
+
+        // 1. MOVEMENT
+        const SimMovement = ({ showArrows, showExpl, lang }) => {
+          return (
+            <div className="w-full h-full flex items-center justify-center relative overflow-hidden bg-emerald-50/50">
+              <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#059669 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+              <div className="relative animate-move-horizontal">
+                <svg width="100" height="60" viewBox="0 0 100 60">
+                  <g className="animate-legs">
+                     <path d="M20,40 L10,55" stroke="#334155" strokeWidth="3" strokeLinecap="round" />
+                     <path d="M40,40 L40,58" stroke="#334155" strokeWidth="3" strokeLinecap="round" />
+                     <path d="M60,40 L70,55" stroke="#334155" strokeWidth="3" strokeLinecap="round" />
+                     <path d="M80,40 L90,55" stroke="#334155" strokeWidth="3" strokeLinecap="round" />
+                  </g>
+                  <ellipse cx="50" cy="30" rx="40" ry="20" fill="#10b981" />
+                  <circle cx="80" cy="25" r="12" fill="#059669" />
+                  <circle cx="85" cy="22" r="2" fill="white" />
+                  <path d="M85,15 L95,5" stroke="#334155" strokeWidth="2" />
+                  <path d="M75,15 L70,5" stroke="#334155" strokeWidth="2" />
+                </svg>
+                {showArrows && (
+                  <div className="absolute top-[-40px] left-1/2 -translate-x-1/2">
+                    <div className="flex flex-col items-center">
+                      <span className="text-emerald-600 font-bold text-xs uppercase mb-1">{lang === 'en' ? 'Movement' : 'Gerakan'}</span>
+                      <ArrowRight className="text-emerald-600 animate-pulse w-8 h-8" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        };
+
+        // 2. RESPIRATION
+        const SimRespiration = ({ showArrows, showInd, lang }) => {
+          return (
+            <div className="w-full h-full flex items-center justify-center relative bg-blue-50/50">
+              <div className="w-48 h-48 rounded-full bg-blue-200 border-4 border-blue-400 flex items-center justify-center relative animate-breathe shadow-lg">
+                <div className="w-16 h-16 bg-blue-300 rounded-full blur-xl absolute opacity-50"></div>
+                <div className="w-20 h-10 bg-orange-200 rounded-full border-2 border-orange-400 opacity-60 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
+                {showInd && (
+                  <div className="absolute z-20 animate-flash-energy">
+                    <Zap className="w-16 h-16 text-yellow-500 fill-yellow-400 drop-shadow-lg" />
+                    <span className="absolute top-14 left-1/2 -translate-x-1/2 font-bold text-yellow-600 bg-white/90 px-1 rounded text-xs whitespace-nowrap">ATP / Energy</span>
+                  </div>
+                )}
+                {showArrows && (
+                  <>
+                    <div className="absolute -left-16 top-1/2 animate-drift-in flex items-center">
+                      <span className="text-blue-600 font-bold mr-1">O₂</span>
+                      <ArrowRight className="text-blue-500" />
+                    </div>
+                     <div className="absolute -left-16 top-1/3 animate-drift-in flex items-center delay-75">
+                      <span className="text-orange-600 font-bold mr-1 text-xs">{lang === 'en' ? 'Food' : 'Makanan'}</span>
+                      <ArrowRight className="text-orange-500" />
+                    </div>
+                    <div className="absolute -right-16 top-1/2 animate-drift-out flex items-center">
+                      <ArrowRight className="text-slate-500" />
+                      <span className="text-slate-600 font-bold ml-1">CO₂</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        };
+
+        // 3. SENSITIVITY
+        const SimSensitivity = ({ showArrows, showInd, lang }) => {
+          return (
+            <div className="w-full h-full flex flex-col items-center justify-end relative bg-sky-100 pb-10">
+              <div className="absolute top-10 w-full h-20">
+                <div className="animate-sun-path w-16 h-16 bg-yellow-400 rounded-full shadow-[0_0_40px_rgba(250,204,21,0.6)] flex items-center justify-center absolute">
+                  {showInd && <div className="absolute bottom-[-25px] text-xs font-bold text-amber-700 bg-white/50 px-2 rounded">{lang === 'en' ? 'Stimulus' : 'Rangsang'}</div>}
+                </div>
+              </div>
+              <div className="relative">
+                <svg width="200" height="250" viewBox="0 0 200 250" className="drop-shadow-lg">
+                  <path d="M70,200 L130,200 L120,250 L80,250 Z" fill="#b45309" />
+                  <g className="animate-plant-bend origin-bottom" style={{transformOrigin: '100px 200px'}}>
+                     <path d="M100,200 Q100,150 100,100" stroke="#65a30d" strokeWidth="8" fill="none" className="transition-all" />
+                     <path d="M100,150 Q130,140 140,120 Q120,130 100,150" fill="#84cc16" />
+                     <path d="M100,170 Q70,160 60,140 Q80,150 100,170" fill="#84cc16" />
+                     <circle cx="100" cy="100" r="15" fill="#eab308" />
+                     <circle cx="100" cy="100" r="25" stroke="#facc15" strokeWidth="4" strokeDasharray="4 2" fill="none" />
+                  </g>
+                </svg>
+                {showArrows && (
+                   <div className="absolute top-10 right-[-40px] animate-pulse">
+                     <div className="text-xs font-bold bg-white/80 p-1 rounded text-emerald-800 border border-emerald-200">
+                       {lang === 'en' ? 'Response' : 'Tanggapan'}
+                     </div>
+                   </div>
+                )}
+              </div>
+            </div>
+          );
+        };
+
+        // 4. GROWTH
+        const SimGrowth = ({ showArrows, showExpl, lang }) => {
+          return (
+            <div className="w-full h-full flex items-end justify-center pb-12 bg-green-50/50">
+              <div className="relative flex flex-col items-center">
+                {showExpl && (
+                  <div className="absolute -left-20 top-0 bottom-0 border-l-2 border-slate-300 flex flex-col justify-between py-2">
+                    <span className="text-xs text-slate-400">- 5yr</span>
+                    <span className="text-xs text-slate-400">- 3yr</span>
+                    <span className="text-xs text-slate-400">- 1yr</span>
+                  </div>
+                )}
+                <svg width="200" height="250" viewBox="0 0 200 250" className="animate-grow origin-bottom">
+                  <rect x="90" y="150" width="20" height="100" fill="#854d0e" />
+                  <circle cx="100" cy="140" r="40" fill="#16a34a" />
+                  <circle cx="70" cy="150" r="30" fill="#16a34a" />
+                  <circle cx="130" cy="150" r="30" fill="#16a34a" />
+                  <circle cx="100" cy="110" r="35" fill="#15803d" />
+                </svg>
+                {showArrows && (
+                  <div className="absolute -right-16 top-1/2 flex flex-col items-center gap-1 animate-pulse">
+                    <ArrowRight className="-rotate-90 text-emerald-600 w-6 h-6" />
+                    <span className="text-xs font-bold text-emerald-700 bg-white/80 px-1 rounded">
+                      {lang === 'en' ? 'Mass +' : 'Massa +'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        };
+
+        // 5. REPRODUCTION
+        const SimReproduction = ({ showArrows, lang }) => {
+          return (
+            <div className="w-full h-full flex items-center justify-center bg-pink-50/50 relative">
+              <div className="relative h-40 w-80 flex items-center justify-center">
+                <div className="animate-fission relative w-full h-full flex items-center justify-center">
+                   <div className="absolute w-20 h-20 bg-pink-400 rounded-full border-4 border-pink-600 flex items-center justify-center animate-cell-left shadow-lg">
+                     <div className="w-6 h-6 bg-pink-800 rounded-full opacity-50"></div>
+                   </div>
+                   <div className="absolute w-20 h-20 bg-pink-400 rounded-full border-4 border-pink-600 flex items-center justify-center animate-cell-right shadow-lg">
+                      <div className="w-6 h-6 bg-pink-800 rounded-full opacity-50"></div>
+                   </div>
+                </div>
+                {showArrows && (
+                   <div className="absolute bottom-0 text-center w-full animate-fade-text">
+                     <span className="text-xs font-bold text-pink-700 bg-white/80 px-2 py-1 rounded">
+                        1 → 2 {lang === 'en' ? 'Offspring' : 'Keturunan'}
+                     </span>
+                   </div>
+                )}
+              </div>
+            </div>
+          );
+        };
+
+        // 6. EXCRETION
+        const SimExcretion = ({ showArrows, lang }) => {
+          return (
+            <div className="w-full h-full flex items-center justify-center bg-orange-50/50">
+              <div className="relative w-40 h-40">
+                <div className="w-full h-full bg-orange-200 rounded-full border-4 border-orange-400 relative z-10 shadow-lg flex items-center justify-center">
+                    <span className="text-orange-900/20 font-bold text-4xl select-none">CELL</span>
+                </div>
+                <div className="absolute top-1/2 left-1/2 w-4 h-4 rounded-full bg-slate-600 z-0 animate-waste-1"></div>
+                <div className="absolute top-1/2 left-1/2 w-3 h-3 rounded-full bg-slate-600 z-0 animate-waste-2"></div>
+                <div className="absolute top-1/2 left-1/2 w-4 h-4 rounded-full bg-slate-600 z-0 animate-waste-3"></div>
+                {showArrows && (
+                   <div className="absolute -right-20 top-0 flex items-center gap-1 animate-pulse">
+                      <ArrowRight className="text-slate-600" />
+                      <span className="text-xs font-bold text-slate-700 bg-white/80 px-2 py-1 rounded">
+                        {lang === 'en' ? 'Toxic Waste' : 'Limbah Racun'}
+                      </span>
+                   </div>
+                )}
+              </div>
+            </div>
+          );
+        };
+
+        // 7. NUTRITION
+        const SimNutrition = ({ showArrows, lang }) => {
+          return (
+            <div className="w-full h-full flex items-center justify-center bg-lime-50/50">
+              <div className="relative flex items-center gap-4">
+                <div className="w-8 h-8 bg-red-500 rounded-full shadow-md animate-food-move relative z-20 flex items-center justify-center">
+                    <span className="text-[8px] text-white font-bold">Food</span>
+                </div>
+                <div className="relative">
+                   <svg width="120" height="120" viewBox="0 0 120 120">
+                     <path d="M60,60 L110,30 A50,50 0 1,1 110,90 Z" fill="#84cc16" stroke="#4d7c0f" strokeWidth="4" className="animate-chomp origin-center" style={{transformOrigin: '60px 60px'}} />
+                   </svg>
+                </div>
+                {showArrows && (
+                   <div className="absolute top-[-40px] left-10">
+                      <span className="text-xs font-bold text-lime-800 bg-white/80 px-2 py-1 rounded">
+                         {lang === 'en' ? 'Ingestion' : 'Makan'}
+                      </span>
+                   </div>
+                )}
+              </div>
+            </div>
+          );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
